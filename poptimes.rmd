@@ -1,0 +1,43 @@
+---
+title: "populartimes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidyjson)
+
+```
+
+```{r read}
+read_places_json <- function(place_type) {
+  return(read_json(place_type) %>% gather_array)
+}
+
+bar <- read_places_json("btv-bar.json")
+```
+
+```{r tidying}
+tidy_places <- function(places) {
+  spread <- as.data.frame(places %>% spread_all %>% select(array.index, id, name, address)) %>% select(!c(..JSON))
+  
+  times <- places %>% enter_object(populartimes) %>% gather_array %>% enter_object(data) %>% gather_array %>% append_values_number("value") %>% select(!c(document.id))
+  
+  times_wide <- as.data.frame(times) %>% select(!c(..JSON)) %>% pivot_wider(names_from = c(array.index.2, array.index.3), values_from = value)
+  
+  time_spent <- places %>% enter_object(time_spent) %>% gather_array %>% append_values_number("value") %>% select(!c(document.id))
+  
+  time_spent_wide <- as.data.frame(time_spent) %>% select(!c(..JSON)) %>% pivot_wider(names_from = array.index.2, names_prefix="time.spent.", values_from = value)
+  
+  types <- places %>% enter_object(types) %>% gather_array() %>% append_values_string("type") %>% select(!c(document.id))
+  
+  types_wide <- as.data.frame(types) %>% select(!c(..JSON)) %>% pivot_wider(names_from = array.index.2, names_prefix="type.", values_from = type)
+  
+  tidy_places <- spread %>% left_join(types_wide, by="array.index") %>% left_join(time_spent_wide, by="array.index") %>% left_join(ticmes_wide, by="array.index") %>% select(-c(array.index))
+  
+  return(tidy_places)
+}
+
+tidy_bar <- tidy_places(bar)
+```
