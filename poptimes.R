@@ -5,7 +5,7 @@ read_places_json <- function(place_type) {
   filename <- paste("btv-", place_type, ".json", sep="")
   return(read_json(filename) %>% gather_array)
 }
-places <- c("bar", "cafe", "restaurant")
+places <- c("bar", "cafe", "restaurant", "supermarket")
 places_json <- lapply(places, read_places_json)
 
 
