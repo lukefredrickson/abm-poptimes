@@ -1,13 +1,16 @@
 library(tidyverse)
 library(tidyjson)
 
+# function to ease reading in multiple json files from the python poptimes library
 read_places_json <- function(place_type) {
   filename <- paste("btv-", place_type, ".json", sep="")
   return(read_json(filename) %>% gather_array)
 }
-places <- c("bar", "cafe", "restaurant", "supermarket")
-places_json <- lapply(places, read_places_json)
-
+# read json files
+place_files <- c("bar", "cafe", "restaurant", "supermarket")
+places_json <- lapply(place_files, read_places_json)
+# list of all possible google maps place types
+place_types <- scan("place-types.txt", what="", sep="\n")
 
 tidy_places_json <- function(places_json) {
   tidy_df <- as.data.frame(places_json %>%
@@ -35,10 +38,9 @@ tidy_places_json <- function(places_json) {
   
   time_spent_wide <- as.data.frame(time_spent) %>% 
     select(!c(..JSON)) %>% 
-    pivot_wider(names_from = array.index.2, names_prefix="time.spent.", values_from = value)
+    pivot_wider(names_from = array.index.2, names_prefix="time_spent_", values_from = value)
   
-  type_names <- c("bar", "restaurant", "cafe", "supermarket", "church", "gym", "shopping_mall", "store", "department_store")
-  tidy_df[type_names] <- 0
+  tidy_df[place_types] <- 0
   
   types <- places_json %>% 
     enter_object(types) %>% 
@@ -75,19 +77,4 @@ combine_places <- function(tidy_places_vec) {
 tidy_places_vec <- lapply(places_json, tidy_places_json)
 tidy_places <- combine_places(tidy_places_vec)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+write_csv(tidy_places, "tidy-places.csv")
