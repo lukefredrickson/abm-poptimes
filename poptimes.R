@@ -3,11 +3,11 @@ library(tidyjson)
 
 # function to ease reading in multiple json files from the python poptimes library
 read_places_json <- function(place_type) {
-  filename <- paste("btv-", place_type, ".json", sep="")
+  filename <- paste("chit-", place_type, ".json", sep="")
   return(read_json(filename) %>% gather_array)
 }
 # read json files
-place_files <- c("bar", "cafe", "restaurant", "supermarket")
+place_files <- c("bar", "department_store", "gym", "restaurant", "shopping_mall", "supermarket")
 places_json <- lapply(place_files, read_places_json)
 # list of all possible google maps place types
 place_types <- scan("place-types.txt", what="", sep="\n")
@@ -15,7 +15,7 @@ place_types <- scan("place-types.txt", what="", sep="\n")
 tidy_places_json <- function(places_json) {
   tidy_df <- as.data.frame(places_json %>%
     spread_all %>% 
-    select(array.index, id, name, address)) %>% 
+    select(array.index, id, name, address, rating, rating_n)) %>% 
     select(!c(..JSON))
   
   times <- places_json %>% 
