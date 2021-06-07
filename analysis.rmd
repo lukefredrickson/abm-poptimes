@@ -14,12 +14,18 @@ filter_poi <- function(type) {
   return(poptimes %>% filter(poptimes[type] != 0 & poptimes[type] <= max_level))
 }
 
-hours <- function(df) {
-  return(df[,(ncol(df)-(168-1)):ncol(df)])
-}
-
 normalize <- function(x) {
   return( (x - min(x) ) / ( max(x) - min(x) ) * 100)
+}
+
+summarize_hours <- function(input, func=mean) {
+  df <- input[,(ncol(input)-(168-1)):ncol(input)]
+  df <- as.data.frame(t(df %>% summarize_each(funs(func))))
+  df$hour <- 1:nrow(df)
+  colnames(df) <- c("popularity", "hour")
+  df <- df %>% relocate(hour, .before = popularity)
+  df$popularity <- normalize(df$popularity)
+  return(df)
 }
 ```
 
@@ -38,14 +44,19 @@ department_store <- as.data.frame(filtered[match("department_store", poi)])
 store <- union(shopping_mall, department_store)
 ```
 
-```{r times}
-b <- as.data.frame(t(hours(bar) %>% summarize_each(funs(mean))))
-b$hour <- 1:nrow(b)
-colnames(b) <- c("popularity", "hour")
-b <- b %>% relocate(hour, .before = popularity)
-b$popularity <- normalize(b$popularity)
+```{r plots}
 
+weekly <- function(input) {
+  return(ggplot(data = input, mapping = aes(x=hour, y=popularity)) + geom_bar(stat="identity", fill="gray50") + theme_minimal())
+}
 
-ggplot(data = b, mapping = aes(x=hour, y=popularity)) + geom_bar(stat="identity", fill="coral") + theme_minimal()
+weekly(summarize_hours(bar, mean))
+weekly(summarize_hours(restaurant, mean))
+weekly(summarize_hours(supermarket, mean))
+weekly(summarize_hours(gym, mean))
+weekly(summarize_hours(shopping_mall, mean))
+weekly(summarize_hours(department_store, mean))
+weekly(summarize_hours(store, mean))
+
 
 ```
