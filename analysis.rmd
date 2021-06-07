@@ -1,0 +1,51 @@
+---
+title: "Google Maps Popular Times Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r functions}
+filter_poi <- function(type) {
+  max_level <- 2
+  return(poptimes %>% filter(poptimes[type] != 0 & poptimes[type] <= max_level))
+}
+
+hours <- function(df) {
+  return(df[,(ncol(df)-(168-1)):ncol(df)])
+}
+
+normalize <- function(x) {
+  return( (x - min(x) ) / ( max(x) - min(x) ) * 100)
+}
+```
+
+```{r readdata}
+poptimes <- read_csv("tidy-places.csv")
+poi <- c("bar", "restaurant", "supermarket", "church", "gym", "shopping_mall", "store", "department_store")
+
+filtered <- lapply(poi, filter_poi)
+
+bar <- as.data.frame(filtered[match("bar", poi)])
+restaurant <- as.data.frame(filtered[match("restaurant", poi)])
+supermarket <- as.data.frame(filtered[match("supermarket", poi)])
+gym <- as.data.frame(filtered[match("gym", poi)])
+shopping_mall <- as.data.frame(filtered[match("shopping_mall", poi)])
+department_store <- as.data.frame(filtered[match("department_store", poi)])
+store <- union(shopping_mall, department_store)
+```
+
+```{r times}
+b <- as.data.frame(t(hours(bar) %>% summarize_each(funs(mean))))
+b$hour <- 1:nrow(b)
+colnames(b) <- c("popularity", "hour")
+b <- b %>% relocate(hour, .before = popularity)
+b$popularity <- normalize(b$popularity)
+
+
+ggplot(data = b, mapping = aes(x=hour, y=popularity)) + geom_bar(stat="identity", fill="coral") + theme_minimal()
+
+```
