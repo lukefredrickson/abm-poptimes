@@ -46,11 +46,33 @@ store <- union(shopping_mall, department_store)
 
 ```{r plots}
 
-weekly <- function(input) {
-  return(ggplot(data = input, mapping = aes(x=hour, y=popularity)) + geom_bar(stat="identity", fill="gray50") + theme_minimal())
+weekly <- function(input, plot_title=NULL) {
+  return(ggplot(data = input, mapping = aes(x=hour, y=popularity)) + geom_bar(stat="identity", fill="gray50") + theme_minimal() + labs(title=plot_title, x="Hour of Week (Mon-Sun)", y="Popularity") +
+           scale_x_continuous(breaks=seq(0, 168, 6)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 }
 
-weekly(summarize_hours(bar, mean))
+get_days <- function(input) {
+  mon <- input %>% slice(1:24)
+  tue <- input %>% slice(25:48)
+  wed <- input %>% slice(49:72)
+  thu <- input %>% slice(73:96)
+  fri <- input %>% slice(97:120)
+  sat <- input %>% slice(121:144)
+  sun <- input %>% slice(145:168)
+  days <- c(mon, tue, wed, thu, fri, sat, sun)
+  for (day in days) {
+    day$hour <- 1:24
+  }
+  return(days)
+}
+
+daily <- function(input, group_title=NULL) {
+  return(weekly(mon, group_title))
+}
+
+#days <- get_days(summarize_hours(bar, mean))
+
+weekly(summarize_hours(bar, mean), "Mean Bar Popularity, By Week")
 weekly(summarize_hours(restaurant, mean))
 weekly(summarize_hours(supermarket, mean))
 weekly(summarize_hours(gym, mean))
