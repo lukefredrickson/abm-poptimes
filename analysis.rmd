@@ -18,15 +18,15 @@ normalize <- function(x) {
 }
 
 summarize_hours <- function(input, func=mean) {
-  df <- input[,(ncol(input)-(168-1)):ncol(input)]
-  df <- as.data.frame(t(df %>% summarize_each(funs(func))))
-  df$hour.total <- 0:(nrow(df)-1)
-  days <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-  df$day <- days[floor((df$hour) / 24) + 1]
-  df$hour.day <- df$hour %% 24
-  colnames(df)[1] <- "popularity"
-  df$popularity <- normalize(df$popularity)
-  df <- df[, c(3, 2, 1, 4)]
+  df = input[,(ncol(input)-(168-1)):ncol(input)]
+  df = as.data.frame(t(df %>% summarize_each(funs(func))))
+  df$hour.total = 0:(nrow(df)-1)
+  days = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+  df$day = days[floor((df$hour) / 24) + 1]
+  df$hour.day = df$hour %% 24
+  colnames(df)[1] = "popularity"
+  df$popularity = normalize(df$popularity)
+  df = df[, c(3, 2, 1, 4)]
   return(df)
 }
 ```
@@ -44,17 +44,18 @@ gym <- as.data.frame(filtered[match("gym", poi)])
 shopping_mall <- as.data.frame(filtered[match("shopping_mall", poi)])
 department_store <- as.data.frame(filtered[match("department_store", poi)])
 store <- union(shopping_mall, department_store)
+
 ```
 
 ```{r plotting_functions}
 plot_hours <- function(input, plot_title=NULL, day_filter=NULL) {
-  x_breaks <- seq(0, 24, 6)
-  y_breaks <- seq(0, 100, 10)
+  x_breaks = seq(0, 24, 6)
+  y_breaks = seq(0, 100, 10)
   if (!is.null(day_filter)) {
-    input <- input %>% filter(day == day_filter)
-    x_breaks <- seq(0, 23, 1)
+    input = input %>% filter(day == day_filter)
+    x_breaks = seq(0, 23, 1)
   }
-  plot <- ggplot(data = input, mapping = aes(x=hour.day, y=popularity)) +
+  plot = ggplot(data = input, mapping = aes(x=hour.day, y=popularity)) +
     geom_bar(stat="identity", fill="dodgerblue4", color="white", width=1) + 
     facet_wrap(~factor(day,levels=c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), nrow=1) +
     labs(title=plot_title, x="Hour of Day", y="Popularity") +
@@ -66,7 +67,7 @@ plot_hours <- function(input, plot_title=NULL, day_filter=NULL) {
 }
 
 plot_hours_daily <- function(input, plot_title=NULL) {
-  days <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+  days = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
   for(day in days) {
     print(plot_hours(input, plot_title, day))
   }
@@ -74,13 +75,33 @@ plot_hours_daily <- function(input, plot_title=NULL) {
 
 plot_hours_individual <- function(input) {
   for (x in 1:nrow(input)) {
-    name <- input[x,"name"]
-    addr <- input[x,"address"]
+    name = input[x,"name"]
+    addr = input[x,"address"]
     print(plot_hours(summarize_hours(input[x,], mean), paste(name, addr, sep=" // ")))
   }
 }
 
+avg_time_spent <- function(input, type) {
+  data = input %>% filter(!is.na(time_spent_1) & !is.na(time_spent_2))
+  t1 = mean(data$time_spent_1)
+  t2 = mean(data$time_spent_2)
+  df = data.frame("type"=type, "time_spent_1"=t1, "time_spent_2"=t2)
+  return(df)
+}
+
 ```
+
+```{r time_spent}
+
+loc <- list(bar, restaurant, supermarket, gym, shopping_mall, department_store, store)
+loc_name <- c("bar", "restaurant", "supermarket", "gym", "shopping mall", "department store", "store")
+
+for (i in 1:length(loc)) {
+  print(avg_time_spent(as.data.frame(loc[i]), loc_name[i]))
+}
+
+```
+
 
 ```{r weekly_plots, fig.align="center", echo = FALSE, fig.width = 12, fig.height=4}
 plot_hours(summarize_hours(bar, mean), "Mean Bar Popularity")
