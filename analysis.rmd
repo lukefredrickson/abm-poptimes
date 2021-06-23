@@ -6,6 +6,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(knitr)
 ```
 
 ```{r functions}
@@ -91,19 +92,29 @@ avg_time_spent <- function(input, type) {
 
 ```
 
+# Average Time Spent per Location Type
+
 ```{r time_spent}
 
-loc <- list(bar, restaurant, supermarket, gym, shopping_mall, department_store, store)
-loc_name <- c("bar", "restaurant", "supermarket", "gym", "shopping mall", "department store", "store")
+loc <- list(bar, restaurant, supermarket, gym, shopping_mall, department_store)
+loc_name <- c("bar", "restaurant", "supermarket", "gym", "shopping mall", "department store")
 
+avg_time <- data.frame("type"=".", "time_spent_1"=0.1, "time_spent_2"=0.1)
 for (i in 1:length(loc)) {
-  print(avg_time_spent(as.data.frame(loc[i]), loc_name[i]))
+  avg_time <- union(avg_time, as.data.frame(avg_time_spent(as.data.frame(loc[i]), loc_name[i])))
 }
+avg_time <- avg_time[2:nrow(avg_time),]
+avg_time <- avg_time %>% mutate(time_spent_diff = time_spent_2-time_spent_1)
+
+kable(avg_time %>% arrange(time_spent_1), caption = "Sort by time_spent_1")
+kable(avg_time %>% arrange(time_spent_2), caption = "Sort by time_spent_2")
+kable(avg_time %>% arrange(time_spent_diff), caption = "Sort by time_spent_diff")
 
 ```
 
+# Weekly Popular Times Plots per Location Type
 
-```{r weekly_plots, fig.align="center", echo = FALSE, fig.width = 12, fig.height=4}
+```{r weekly_plots, fig.align="center", echo = FALSE, fig.width = 12, fig.height=4, warning=FALSE}
 plot_hours(summarize_hours(bar, mean), "Mean Bar Popularity")
 plot_hours(summarize_hours(restaurant, mean), "Mean Restaurant Popularity")
 plot_hours(summarize_hours(supermarket, mean), "Mean Supermarket Popularity")
@@ -112,6 +123,9 @@ plot_hours(summarize_hours(shopping_mall, mean), "Mean Shopping Mall Popularity"
 plot_hours(summarize_hours(department_store, mean), "Mean Department Store Popularity")
 plot_hours(summarize_hours(store, mean), "Mean Store Popularity (Shopping Mall + Department Store)")
 ```
+
+# Weekly Popular Times Plots per Specific Grocery Stores
+
 ```{r individual_supermarkets, fig.align="center", echo = FALSE, fig.width = 12, fig.height=4}
 plot_hours_individual(supermarket)
 ```
@@ -120,29 +134,43 @@ plot_hours_individual(supermarket)
 #plot_hours_individual(bar)
 ```
 
+# Daily Popular Times Plots for All Bars
+
 ```{r bar_daily}
 plot_hours_daily(summarize_hours(bar, mean), "Mean Bar Popularity")
 ```
 
+# Daily Popular Times Plots for All Restaurants
+
 ```{r restaurant_daily}
 plot_hours_daily(summarize_hours(restaurant, mean), "Mean Restaurant Popularity")
 ```
+
+# Daily Popular Times Plots for All Supermarkets
  
 ```{r supermarket_daily}
 plot_hours_daily(summarize_hours(supermarket, mean), "Mean Supermarket Popularity")
 ```
 
+# Daily Popular Times Plots for All Gyms
+
 ```{r gym_daily}
 plot_hours_daily(summarize_hours(gym, mean), "Mean Gym Popularity")
 ```
+
+# Daily Popular Times Plots for All Shopping Malls
 
 ```{r shopping_mall_daily}
 plot_hours_daily(summarize_hours(shopping_mall, mean), "Mean Shopping Mall Popularity")
 ```
 
+# Daily Popular Times Plots for All Department Stores
+
 ```{r department_store_daily}
 plot_hours_daily(summarize_hours(department_store, mean), "Mean Department Store Popularity")
 ```
+
+# Daily Popular Times Plots for All Stores (Shopping Malls + Department Stores)
 
 ```{r store_daily}
 plot_hours_daily(summarize_hours(store, mean), "Mean Store Popularity (Shopping Mall + Department Store)")

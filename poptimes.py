@@ -4,7 +4,7 @@ import pandas as pd
 import json
 
 #%%
-key = "AIzaSyC49nDgrH1XV_3GWPZejjfCVizSB7wzZFY"
+key = "---"
 
 place = "restaurant"
 
